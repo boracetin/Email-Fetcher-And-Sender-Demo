@@ -1,4 +1,6 @@
 ﻿
+
+
 using MailKit.Net.Imap;
 using MailKit;
 using MailKit.Net.Pop3;
@@ -6,59 +8,25 @@ using System.Net.Mail;
 using System.Net;
 using EmailFetcherDemo.Models;
 using EmailFetcherDemo.Enums;
+using MimeKit;
+using System.IO;
+using EmailFetcherDemo.Extentions;
+using System.Reflection;
+using EmailFetcherDemo.Helpers;
 
-var fetcherServer = new MailServer() { 
-    Email="asd@gmail.com",
-    Password= "sadfds",
-    Port=993,
+var fetcherServer = new MailServer()
+{
+    Email = "123@gmail.com",
+    Password = "123213",
+    Port = 993,
     HostAddress = "imap.gmail.com",
-    ServerType=EnumMailServerType.IMAP
+    ServerType = EnumMailServerType.IMAP
 };
 
 try
 {
-
-
-
-    using (var client = new ImapClient())
-    {
-        // IMAP sunucusuna bağlan
-        client.Connect(fetcherServer.HostAddress, fetcherServer.Port, true);
-
-        // Kimlik doğrulama
-        client.Authenticate(fetcherServer.Email, fetcherServer.Password);
-
-        Console.WriteLine("IMAP sunucusuna bağlanıldı ve kimlik doğrulandı.");
-
-        // Gelen kutusunu aç
-        var inbox = client.Inbox;
-        inbox.Open(FolderAccess.ReadWrite);
-        var unreadMessages = await inbox.SearchAsync(MailKit.Search.SearchQuery.All);
-
-        Console.WriteLine($"Toplam Mail Sayısı: {inbox.Count}");
-        Console.WriteLine($"Okunmamış Mail Sayısı: {inbox.Unread}");
-        foreach (var messageIndex in unreadMessages)
-        {
-            var message = await inbox.GetMessageAsync(messageIndex);
-            Console.WriteLine($"- Konu: {message.Subject}");
-            Console.WriteLine($"- Body: {message.Body}");
-            Console.WriteLine($"  Gönderen: {message.From}");
-            Console.WriteLine($"  To: {message.To}");
-            Console.WriteLine($"  CC: {message.Cc}");
-            Console.WriteLine($"  BCC: {message.Bcc}");
-            Console.WriteLine($" ReplyTo : {message.ReplyTo}");
-            Console.WriteLine($" InReplyTo : {message.InReplyTo}");
-
-            Console.WriteLine($"  MessageId: {message.MessageId}");
-            Console.WriteLine($"  References: {message.References}");
-
-            //Console.WriteLine($"  Attachments: {message.Attachments}");
-            Console.WriteLine($"  Tarih: {message.Date}");
-            await inbox.AddFlagsAsync(messageIndex, MessageFlags.Seen, true);
-            Console.WriteLine(new string('-', 50));
-        }
-        client.Disconnect(true);
-    }
+    var mailFetcher = new MailParser(fetcherServer);
+    await mailFetcher.ConnectMailServerAsync();
 }
 catch (Exception ex)
 {

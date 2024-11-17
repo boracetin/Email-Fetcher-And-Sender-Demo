@@ -13,7 +13,7 @@ namespace EmailFetcherDemo.Models
         public required string Password { get; set; }
         public int Port { get; set; }
         public EnumMailServerType ServerType { get; set; }
-        public required string Server { get; set; }
+        public required string HostAddress { get; set; }
 
 
     }

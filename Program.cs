@@ -16,8 +16,8 @@ using EmailFetcherDemo.Helpers;
 
 var fetcherServer = new MailServer()
 {
-    Email = "123@gmail.com",
-    Password = "123213",
+    Email = "",
+    Password = "",
     Port = 993,
     HostAddress = "imap.gmail.com",
     ServerType = EnumMailServerType.IMAP
@@ -25,49 +25,67 @@ var fetcherServer = new MailServer()
 
 try
 {
-    var mailFetcher = new MailParser(fetcherServer);
-    await mailFetcher.ConnectMailServerAsync();
+    while (true)
+    {
+        try
+        {
+            var mailFetcher = new MailParser(fetcherServer);
+            await mailFetcher.ConnectMailServerAsync();
+            Console.WriteLine($"{DateTime.Now}: Mail kontrolü tamamlandı.");
+
+
+            string inReplyToMessageId = "";
+
+            var mailSender = new MailServer()
+            {
+                Email = "",
+                Password = "",
+                HostAddress = "smtp.gmail.com",
+                ServerType = EnumMailServerType.SMTP,
+                Port = 587
+            };
+            try
+            {
+                SmtpClient smtpClient = new SmtpClient(mailSender.HostAddress, mailSender.Port)
+                {
+                    Credentials = new NetworkCredential(mailSender.Email, mailSender.Password),
+                    EnableSsl = true
+                };
+
+
+                MailMessage mail = new MailMessage
+                {
+                    From = new MailAddress(mailSender.Email),
+                    Subject = "RE: Bora İlk Gönderilen Mail",
+                    Body = "Cevap Açıklaması",
+                    IsBodyHtml = false
+                };
+
+                mail.To.Add("");
+                mail.Headers.Add("In-Reply-To", "<" + inReplyToMessageId + ">");
+                mail.Headers.Add("References", "<" + inReplyToMessageId + ">");
+
+                smtpClient.Send(mail);
+                Console.WriteLine("E-posta başarıyla gönderildi!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"E-posta gönderim hatası: {ex.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{DateTime.Now}: Bir hata oluştu: {ex.Message}");
+        }
+
+        // 1 dakika bekle
+        await Task.Delay(TimeSpan.FromMinutes(1));
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine($"Bir hata oluştu: {ex.Message}");
 }
 
-string toEmail = "bora.cetin@outlook.com"; // Alıcı e-posta adresi
 
-var mailSender = new MailServer()
-{
-    Email = "9@gmail.com",
-    Password = "asda",
-    HostAddress = "smtp.gmail.com",
-    ServerType = EnumMailServerType.SMTP,
-    Port = 587
-};
-try
-{
-    // SMTP istemcisi oluştur
-    SmtpClient smtpClient = new SmtpClient(mailSender.HostAddress, mailSender.Port)
-    {
-        Credentials = new NetworkCredential(mailSender.Email, mailSender.Password), // Kimlik doğrulama
-        EnableSsl = true // Güvenli bağlantı
-    };
-
-    // E-posta mesajı oluştur
-    MailMessage mail = new MailMessage
-    {
-        From = new MailAddress(mailSender.Email), // Gönderen
-        Subject = "Test E-postası", // Konu
-        Body = "Bu bir test e-postasıdır.", // İçerik
-        IsBodyHtml = false // HTML içermiyor
-    };
-
-    mail.To.Add(toEmail); // Alıcıyı ekle
-
-    // E-postayı gönder
-    //smtpClient.Send(mail);
-    Console.WriteLine("E-posta başarıyla gönderildi!");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"E-posta gönderim hatası: {ex.Message}");
-}
+Console.ReadLine();
